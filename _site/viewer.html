@@ -30,6 +30,7 @@ See https://github.com/adobe-type-tools/cmap-resources
 <!-- This snippet is used in production (included from viewer.html) -->
 <link rel="resource" type="application/l10n" href="locale/locale.json">
 <script src="../build/pdf.mjs" type="module"></script>
+<script src="reconnecting-websocket.min.js"></script>
 
     <link rel="stylesheet" href="viewer.css">
 
@@ -121,6 +122,12 @@ See https://github.com/adobe-type-tools/cmap-resources
           <div id="highlightParamsToolbarContainer" class="editorParamsToolbarContainer">
             <div id="editorHighlightColorPicker" class="colorPicker">
               <span id="highlightColorPickerLabel" class="editorParamsLabel" data-l10n-id="pdfjs-editor-highlight-colorpicker-label">Highlight color</span>
+            </div>
+            <div id="editorHighlightThickness">
+              <label for="editorFreeHighlightThickness" class="editorParamsLabel" data-l10n-id="pdfjs-editor-free-highlight-thickness-input">Thickness</label>
+              <div class="thicknessPicker">
+                <input type="range" id="editorFreeHighlightThickness" class="editorParamsSlider" data-l10n-id="pdfjs-editor-free-highlight-thickness-title" value="12" min="8" max="24" step="1" tabindex="101">
+              </div>
             </div>
           </div>
         </div>

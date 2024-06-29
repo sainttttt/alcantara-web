@@ -18,7 +18,7 @@
   text-align:initial;
   inset:0;
   overflow:hidden;
-  opacity:0.25;
+  opacity:1;
   line-height:1;
   -webkit-text-size-adjust:none;
      -moz-text-size-adjust:none;
@@ -26,7 +26,12 @@
   forced-color-adjust:none;
   transform-origin:0 0;
   z-index:2;
+  caret-color:CanvasText;
 }
+
+.textLayer.highlighting{
+    touch-action:none;
+  }
 
 .textLayer :is(span, br){
     color:transparent;
@@ -42,20 +47,28 @@
   }
 
 .textLayer .highlight{
-    --highlight-bg-color:rgb(180 0 170);
-    --highlight-selected-bg-color:rgb(0 100 0);
+    --highlight-bg-color:rgb(180 0 170 / 0.25);
+    --highlight-selected-bg-color:rgb(0 100 0 / 0.25);
+    --highlight-backdrop-filter:none;
+    --highlight-selected-backdrop-filter:none;
 
     margin:-1px;
     padding:1px;
     background-color:var(--highlight-bg-color);
+    -webkit-backdrop-filter:var(--highlight-backdrop-filter);
+            backdrop-filter:var(--highlight-backdrop-filter);
     border-radius:4px;
   }
 
 @media screen and (forced-colors: active){
 
 .textLayer .highlight{
-      --highlight-bg-color:Highlight;
-      --highlight-selected-bg-color:ButtonText;
+      --highlight-bg-color:transparent;
+      --highlight-selected-bg-color:transparent;
+      --highlight-backdrop-filter:var(--hcm-highlight-filter);
+      --highlight-selected-backdrop-filter:var(
+        --hcm-highlight-selected-filter
+      );
   }
     }
 
@@ -77,16 +90,18 @@
 
 .textLayer .highlight.selected{
       background-color:var(--highlight-selected-bg-color);
+      -webkit-backdrop-filter:var(--highlight-selected-backdrop-filter);
+              backdrop-filter:var(--highlight-selected-backdrop-filter);
     }
 
 .textLayer ::-moz-selection{
-    background:blue;
-    background:AccentColor;
+    background:rgba(0 0 255 / 0.25);
+    background:color-mix(in srgb, AccentColor, transparent 75%);
   }
 
 .textLayer ::selection{
-    background:blue;
-    background:AccentColor;
+    background:rgba(0 0 255 / 0.25);
+    background:color-mix(in srgb, AccentColor, transparent 75%);
   }
 
 .textLayer br::-moz-selection{
@@ -137,7 +152,6 @@
     --input-disabled-border-color:GrayText;
     --input-hover-border-color:Highlight;
     --link-outline:1.5px solid LinkText;
-    --hcm-highlight-filter:invert(100%);
 }
 
     .annotationLayer .textWidgetAnnotation :is(input, textarea):required, .annotationLayer .choiceWidgetAnnotation select:required, .annotationLayer .buttonWidgetAnnotation:is(.checkBox, .radioButton) input:required{
@@ -794,7 +808,6 @@
 
       position:absolute;
       mix-blend-mode:var(--blend-mode);
-      fill-rule:evenodd;
     }
 
 @media screen and (forced-colors: active){
@@ -802,6 +815,10 @@
 .canvasWrapper svg.highlight{
         --blend-mode:difference;
     }
+      }
+
+.canvasWrapper svg.highlight:not(.free){
+        fill-rule:evenodd;
       }
 
 .canvasWrapper svg.highlightOutline{
@@ -850,7 +867,21 @@
   );
   --editorFreeText-editing-cursor:text;
   --editorInk-editing-cursor:url(images/cursor-editorInk.svg) 0 16, pointer;
+  --editorHighlight-editing-cursor:url(images/cursor-editorTextHighlight.svg) 23 23, text;
+  --editorFreeHighlight-editing-cursor:url(images/toolbarButton-editorHighlight.svg) 0 16, pointer;
 }
+
+.textLayer.highlighting{
+  cursor:var(--editorFreeHighlight-editing-cursor);
+}
+
+.textLayer.highlighting:not(.free) span{
+    cursor:var(--editorHighlight-editing-cursor);
+  }
+
+.textLayer.highlighting.free span{
+    cursor:var(--editorFreeHighlight-editing-cursor);
+  }
 
 @media (-webkit-min-device-pixel-ratio: 1.1), (min-resolution: 1.1dppx){
   :root{
@@ -924,6 +955,10 @@
 
 .annotationEditorLayer .draggable.selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor){
     cursor:move;
+  }
+
+.annotationEditorLayer .moving:is(.freeTextEditor, .inkEditor, .stampEditor){
+    touch-action:none;
   }
 
 .annotationEditorLayer .selectedEditor:is(.freeTextEditor, .inkEditor, .stampEditor){
@@ -1931,19 +1966,19 @@
     border:none;
   }
 
-.annotationEditorLayer[data-main-rotation="0"] .highlightEditor > .editToolbar{
+.annotationEditorLayer[data-main-rotation="0"] .highlightEditor:not(.free) > .editToolbar{
       rotate:0deg;
     }
 
-.annotationEditorLayer[data-main-rotation="90"] .highlightEditor > .editToolbar{
+.annotationEditorLayer[data-main-rotation="90"] .highlightEditor:not(.free) > .editToolbar{
       rotate:270deg;
     }
 
-.annotationEditorLayer[data-main-rotation="180"] .highlightEditor > .editToolbar{
+.annotationEditorLayer[data-main-rotation="180"] .highlightEditor:not(.free) > .editToolbar{
       rotate:180deg;
     }
 
-.annotationEditorLayer[data-main-rotation="270"] .highlightEditor > .editToolbar{
+.annotationEditorLayer[data-main-rotation="270"] .highlightEditor:not(.free) > .editToolbar{
       rotate:90deg;
     }
 
@@ -1951,15 +1986,18 @@
     position:absolute;
     background:transparent;
     z-index:1;
-    transform-origin:0 0;
     cursor:auto;
     max-width:100%;
     max-height:100%;
     border:none;
     outline:none;
     pointer-events:none;
-    transform:none;
+    transform-origin:0 0;
   }
+
+.annotationEditorLayer .highlightEditor:not(.free){
+      transform:none;
+    }
 
 .annotationEditorLayer .highlightEditor .internal{
       position:absolute;
@@ -2016,6 +2054,10 @@
             background-color:var(--editor-toolbar-hover-bg-color);
           }
 
+.annotationEditorLayer .highlightEditor .editToolbar .buttons .colorPicker:has(.dropdown:not(.hidden))::after{
+              scale:-1;
+            }
+
 .annotationEditorLayer .highlightEditor .editToolbar .buttons .colorPicker .dropdown{
             position:absolute;
             display:flex;
@@ -2067,22 +2109,23 @@
   height:auto;
   padding-inline:10px;
   padding-block:10px 16px;
+  gap:16px;
   display:flex;
   flex-direction:column;
   box-sizing:border-box;
 }
+
+#highlightParamsToolbarContainer .editorParamsLabel{
+    width:-moz-fit-content;
+    width:fit-content;
+    inset-inline-start:0;
+  }
 
 #highlightParamsToolbarContainer .colorPicker{
     display:flex;
     flex-direction:column;
     gap:8px;
   }
-
-#highlightParamsToolbarContainer .colorPicker #highlightColorPickerLabel{
-      width:-moz-fit-content;
-      width:fit-content;
-      inset-inline-start:0;
-    }
 
 #highlightParamsToolbarContainer .colorPicker .dropdown{
       display:flex;
@@ -2120,6 +2163,70 @@
 #highlightParamsToolbarContainer .colorPicker .dropdown button:is(:hover, :active, :focus-visible) > .swatch{
           outline:2px solid var(--hover-outline-color);
         }
+
+#highlightParamsToolbarContainer #editorHighlightThickness{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    align-self:stretch;
+  }
+
+#highlightParamsToolbarContainer #editorHighlightThickness .editorParamsLabel{
+      width:100%;
+      height:auto;
+      align-self:stretch;
+    }
+
+#highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      align-self:stretch;
+
+      --example-color:#bfbfc9;
+    }
+
+@media (prefers-color-scheme: dark){
+
+:where(html:not(.is-light)) #highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker{
+        --example-color:#80808e;
+    }
+      }
+
+:where(html.is-dark) #highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker{
+        --example-color:#80808e;
+    }
+
+@media screen and (forced-colors: active){
+
+#highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker{
+        --example-color:HighlightText;
+    }
+      }
+
+#highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker::before{
+        content:"";
+        width:8px;
+        aspect-ratio:1;
+        display:block;
+        border-radius:100%;
+        background-color:var(--example-color);
+      }
+
+#highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker .editorParamsSlider{
+        width:unset;
+        height:14px;
+      }
+
+#highlightParamsToolbarContainer #editorHighlightThickness .thicknessPicker::after{
+        content:"";
+        width:24px;
+        aspect-ratio:1;
+        display:block;
+        border-radius:100%;
+        background-color:var(--example-color);
+      }
 
 :root{
   --viewer-container-height:0;
@@ -2163,7 +2270,17 @@
   --scale-factor:1;
 
   padding-bottom:var(--pdfViewer-padding-bottom);
+
+  --hcm-highlight-filter:none;
+  --hcm-highlight-selected-filter:none;
 }
+
+@media screen and (forced-colors: active){
+
+.pdfViewer{
+    --hcm-highlight-filter:invert(100%);
+}
+  }
 
 .pdfViewer .canvasWrapper{
   overflow:hidden;
@@ -2627,7 +2744,7 @@ body{
 }
 
 #viewerContainer{
-  overflow:auto;
+  overflow-x:hidden;
   position:absolute;
   top:0px;
   right:0;
@@ -2659,7 +2776,7 @@ body{
   :is(input, button, select),
 .secondaryToolbar :is(input, button, a, select){
   outline:none;
-  /* font:message-box; */
+  font:message-box;
 }
 
 #toolbarContainer{
@@ -2864,6 +2981,10 @@ body{
   padding-inline:10px;
 }
 
+#editorInkParamsToolbar{
+  visibility:hidden;
+}
+
 .editorParamsToolbarContainer .editorParamsLabel{
   padding-inline-end:10px;
   flex:none;
@@ -2873,6 +2994,7 @@ body{
   font-weight:400;
   line-height:150%;
   color:var(--main-color);
+  height:50px;
 }
 
 .editorParamsToolbarContainer .editorParamsColor{
@@ -2883,7 +3005,8 @@ body{
 
 .editorParamsToolbarContainer .editorParamsSlider{
   background-color:transparent;
-  width:90px;
+  width:200px;
+  height:50px;
   flex:0 1 0;
 }
 
