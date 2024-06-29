@@ -2781,7 +2781,6 @@ const PDFViewerApplication = {
     const openActionPromise = pdfDocument.getOpenAction().catch(() => {});
     this.toolbar?.setPagesCount(pdfDocument.numPages, false);
     this.secondaryToolbar?.setPagesCount(pdfDocument.numPages);
-    this.ws.send(`numpages|${pdfDocument.numPages}`);
     this.pdfLinkService.setDocument(pdfDocument);
     this.pdfDocumentProperties?.setDocument(pdfDocument);
     const pdfViewer = this.pdfViewer;
@@ -3801,8 +3800,6 @@ function webViewerPageChanging({
   pageLabel
 }) {
   PDFViewerApplication.toolbar?.setPageNumber(pageNumber, pageLabel);
-  PDFViewerApplication.ws.send(`pagenum|${pageNumber}`);
-  PDFViewerApplication.ws.send(`numpages|${PDFViewerApplication.pdfDocument.numPages}`);
   PDFViewerApplication.secondaryToolbar?.setPageNumber(pageNumber);
   if (PDFViewerApplication.pdfSidebar?.visibleView === _ui_utils_js__WEBPACK_IMPORTED_MODULE_0__.SidebarView.THUMBS) {
     PDFViewerApplication.pdfThumbnailViewer?.scrollThumbnailIntoView(pageNumber);
@@ -11295,7 +11292,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils_js__WEBPACK_IMPORTED_MODULE_1__.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.108";
+    const viewerVersion = "4.1.109";
     if (pdfjs_lib__WEBPACK_IMPORTED_MODULE_0__.version !== viewerVersion) {
       throw new Error(`The API version "${pdfjs_lib__WEBPACK_IMPORTED_MODULE_0__.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -14844,8 +14841,8 @@ var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([web_
 
 
 
-const pdfjsVersion = "4.1.108";
-const pdfjsBuild = "7901b190c";
+const pdfjsVersion = "4.1.109";
+const pdfjsBuild = "86cb07ac8";
 const AppConstants = {
   LinkTarget: _pdf_link_service_js__WEBPACK_IMPORTED_MODULE_4__.LinkTarget,
   RenderingStates: _ui_utils_js__WEBPACK_IMPORTED_MODULE_2__.RenderingStates,
@@ -15001,40 +14998,13 @@ function webViewerLoad() {
   _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.run(config);
   document.getElementById('viewer').style.filter = 'invert(64%) contrast(228%) brightness(80%) hue-rotate(180deg)';
   let toolbar = document.getElementsByClassName("toolbar")[0];
-  toolbar.style.display = "none";
-  _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ws = new ReconnectingWebSocket('ws://localhost:9001');
-  _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ws.onopen = () => {
-    console.log('ws opened on browser');
-    _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ws.send("opened on browser");
-    clearTimeout(_app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ping);
-    _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ping = setTimeout(() => {
-      _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ws.send("ping");
-    }, 1000);
-  };
-  _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.ws.onmessage = message => {
-    var splitMsg = message.data.split("|");
-    console.log("splitmsg", splitMsg);
-    if (splitMsg[0] == "setPage") {
-      console.log(splitMsg[1]);
-      let pageNumber = parseInt(splitMsg[1]);
-      let toolbar = _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.toolbar;
-      _app_js__WEBPACK_IMPORTED_MODULE_5__.PDFViewerApplication.toolbar?.setPageNumber(pageNumber, "");
-      toolbar.eventBus.dispatch("pagenumberchanged", {
-        source: toolbar,
-        value: pageNumber
-      });
-    } else if (splitMsg[0] == "toggleToolbar") {
-      let toolbar = document.getElementsByClassName("toolbar")[0];
-      console.log("here");
-      if (window.getComputedStyle(toolbar).display === 'block') {
-        toolbar.style.display = "none";
-      } else {
-        toolbar.style.display = "block";
-      }
-    } else if (splitMsg[0] == "highlight") {
-      document.getElementById("editorInk").click();
+  document.getElementById("viewerContainer").addEventListener("dblclick", event => {
+    if (window.getComputedStyle(toolbar).display === 'block') {
+      toolbar.style.display = "none";
+    } else {
+      toolbar.style.display = "block";
     }
-  };
+  });
 }
 document.blockUnblockOnload?.(true);
 if (document.readyState === "interactive" || document.readyState === "complete") {
