@@ -2801,7 +2801,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.109",
+    apiVersion: "4.1.112",
     data,
     password,
     disableAutoFetch,
@@ -4543,8 +4543,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.109";
-const build = "86cb07ac8";
+const version = "4.1.112";
+const build = "0b581cb86";
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
@@ -9409,6 +9409,7 @@ class InkEditor extends editor_editor.AnnotationEditor {
   #boundCanvasPointerdown = this.canvasPointerdown.bind(this);
   #canvasContextMenuTimeoutId = null;
   #currentPath2D = new Path2D();
+  #direction = false;
   #disableEditing = false;
   #hasSomethingToDraw = false;
   #isCanvasInitialized = false;
@@ -9634,6 +9635,7 @@ class InkEditor extends editor_editor.AnnotationEditor {
     this.canvas.addEventListener("pointerup", this.#boundCanvasPointerup);
     this.canvas.removeEventListener("pointerdown", this.#boundCanvasPointerdown);
     this.isEditing = true;
+    this.#direction = false;
     if (!this.#isCanvasInitialized) {
       this.#isCanvasInitialized = true;
       this.#setCanvasDims();
@@ -9653,26 +9655,47 @@ class InkEditor extends editor_editor.AnnotationEditor {
     window.requestAnimationFrame(this.#requestFrameCallback);
   }
   #draw(x, y) {
+    var newX, newY;
+    newX = x;
+    newY = y;
     const [lastX, lastY] = this.currentPath.at(-1);
-    if (this.currentPath.length > 1 && x === lastX && y === lastY) {
+    if (this.currentPath.length > 1 && newX === lastX && newY === lastY) {
       return;
+    }
+    var deltaX = newX - lastX;
+    var deltaY = newY - lastY;
+    if (!this.#direction) {
+      if (Math.abs(deltaY) - Math.abs(deltaX) > 0.1) {
+        this.#direction = "y";
+        newX = lastX;
+      } else {
+        this.#direction = "x";
+        newY = lastY;
+      }
+    }
+    var dir = this.#direction;
+    if (this.#direction == "x") {
+      newY = lastY;
+    } else {
+      newX = lastX;
     }
     const currentPath = this.currentPath;
     let path2D = this.#currentPath2D;
-    currentPath.push([x, y]);
+    currentPath.push([newX, newY]);
     this.#hasSomethingToDraw = true;
     if (currentPath.length <= 2) {
       path2D.moveTo(...currentPath[0]);
-      path2D.lineTo(x, y);
+      path2D.lineTo(newX, newY);
       return;
     }
     if (currentPath.length === 3) {
       this.#currentPath2D = path2D = new Path2D();
       path2D.moveTo(...currentPath[0]);
     }
-    this.#makeBezierCurve(path2D, ...currentPath.at(-3), ...currentPath.at(-2), x, y);
+    this.#makeBezierCurve(path2D, ...currentPath.at(-3), ...currentPath.at(-2), newX, newY);
   }
   #endPath() {
+    this.#direction = "false";
     if (this.currentPath.length === 0) {
       return;
     }
@@ -17352,8 +17375,8 @@ _display_api_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.t
 
 
 
-const pdfjsVersion = "4.1.109";
-const pdfjsBuild = "86cb07ac8";
+const pdfjsVersion = "4.1.112";
+const pdfjsBuild = "0b581cb86";
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } });
